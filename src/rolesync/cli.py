@@ -7,6 +7,7 @@ import sys
 from importlib import metadata, resources
 from pathlib import Path
 
+from . import __version__
 from .core import RoleSyncError, CONFIG, render, sync, validate_project
 
 
@@ -14,7 +15,7 @@ def version() -> str:
     try:
         return metadata.version("rolesync")
     except metadata.PackageNotFoundError:
-        return "1.0.0rc1"
+        return __version__
 
 
 def _preset_root(name: str):
