@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "notice": "CUSTOM PROJECT POLICY. These values are not native Codex/Claude configuration and are not automatically enforced without a validated runtime/controller.",
+  "concurrency": {
+    "max_active_children": 3,
+    "max_code_writers": 2,
+    "one_writer_per_worktree": true,
+    "flat_delegation": true
+  },
+  "retries": {
+    "failed_repair_hypotheses_per_finding_before_escalation": 2,
+    "advanced_interventions_per_finding": 1,
+    "infrastructure_retries": 1,
+    "review_rounds_before_reassessment": 2,
+    "no_budget_reset_on_new_agent": true,
+    "maxturns_cap_alone_is_not_an_escalation_signal": true,
+    "routine_worker_continuation_requires_progress_evidence": true,
+    "continuation_fraction_of_base_maxturns": 0.33,
+    "environment_launch_failure_retry_same_role_before_fallback": true
+  },
+  "supervision": {
+    "routine_no_progress_soft_minutes": 12,
+    "wait_for_cancellation_ack_before_replacement": true,
+    "exclude_active_tests_tool_waits_and_approvals_from_reasoning_stall": true,
+    "max_total_usage_requires_owner_calibration": true
+  },
+  "merge": {
+    "unattended_enabled": false,
+    "enable_after_runtime_and_ruleset_verification": true,
+    "require_recorded_authorization": true,
+    "require_current_head_review": true,
+    "require_required_checks": true,
+    "require_applicable_human_approvals": true,
+    "require_acceptance_evidence": true,
+    "allow_admin_bypass": false
+  },
+  "branches": {
+    "default_lifetime": "issue-ephemeral",
+    "delete_only_after_verified_merge_and_no_remaining_work": true,
+    "unknown_lifetime": "retain",
+    "persistent_iteration_branch": "retain"
+  },
+  "models": {
+    "silent_fallback_allowed": false,
+    "deep_rescue_enabled": false,
+    "record_effective_model_and_effort": true,
+    "api_spending_authorization_not_implied_by_subscription": true
+  },
+  "root_human_decisions": [
+    "subjective-design-or-ux-acceptance",
+    "protected-contract-scope-changes",
+    "new-purchases-or-publishing",
+    "new-credential-or-budget-authority"
+  ]
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "files": {
     ".claude/agents/example-advanced-coder.md": "031703a57e03f9ef09568499e1912e08fb27d85a11c6c42a7b9e824a4a62473a",
-    ".claude/agents/example-architect.md": "36ff8243c2c028a21af18e33981adc71a417ac3c84d0aede21af0dfa4a2dfbab",
+    ".claude/agents/example-architect.md": "d56a76f6225388503e9b6cdd7ecf334adaad14da9b7a3e86eca0ca3a2d901fe9",
     ".claude/agents/example-ci-investigator.md": "4b4e4aacefe683e71bfa2efc1449c6afad85441d4a8234d0af709e795da8ee8a",
     ".claude/agents/example-deep-rescue.md": "9e80c1ee514d48eedca55c4f73517bdf98b5f421b45a5d9058ad21c794c72769",
     ".claude/agents/example-documentation-updater.md": "635a9cc4e4c8de394ff594a697c82ef5f5679432e9dc199e6141bfdb990d7b3a",
@@ -25,7 +25,7 @@
     ".claude/skills/example-review/SKILL.md": "374a5316d428ba939e8b36de5f6be47ad11cfed7b8d99c4edf95099085c3ce53",
     ".claude/skills/example-test/SKILL.md": "ceca6e9efa6d75b6862c5024605ee4555efe6ce8411c92c9b707b0a880949aca",
     ".codex/agents/example-advanced-coder.toml": "357476df25f4a98133b8bc5b14903d0f643d624c55aee3b27bc81588e7ca6bad",
-    ".codex/agents/example-architect.toml": "69c8ff1b9557d1ad5c603ee9f1995b8f26075b6cf9fd248dab8cb28eb2442be6",
+    ".codex/agents/example-architect.toml": "5ba6b83ebfa15215c52d7c642e0192e0b23a508283298172b29a9314340d5a89",
     ".codex/agents/example-ci-investigator.toml": "6bcb0882c4a56e3cc3d83e414130b2ac5d0940f608b62ea047894118df916db4",
     ".codex/agents/example-deep-rescue.toml": "b24c5943db7768444a01bc843cf463b82de881fc676d0ee56d9f9421ef8b8e18",
     ".codex/agents/example-documentation-updater.toml": "51c71e68616a5e475539ccc44214b0097a4b4d0745a2e672a7a05e1354892e2a",

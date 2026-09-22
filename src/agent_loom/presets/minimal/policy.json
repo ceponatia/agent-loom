@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "note": "Informational starter policy; agent-loom renders files but does not enforce runtime orchestration.",
+  "require_independent_review_for_behavior_changes": true,
+  "silent_model_fallback_allowed": false
+}
