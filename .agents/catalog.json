@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "verified_documentation_date": "2026-09-18",
+  "namespace": "example",
+  "notes": "Model routing is a proposed starting policy, not benchmarked optimality. Validate actual availability and effective effort in each installed runtime.",
+  "roles": [
+    {
+      "id": "orchestrator",
+      "name": "example-orchestrator",
+      "description": "Coordinate an authorized GitHub issue from discovery through bounded implementation, independent review, and PR handoff. Top-level role only; not a generic worker or a background daemon.",
+      "source": ".agents/roles/orchestrator.md",
+      "skill": "example-orchestrate",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "high",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "high",
+        "maxTurns": 48,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Edit",
+          "Write",
+          "Agent",
+          "SendMessage",
+          "Skill",
+          "mcp__Claude_Browser__*",
+          "mcp__ccd_view__show_pane"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "reader",
+      "name": "example-reader",
+      "description": "Locate relevant repository files, instruction scopes, symbols, tests, and factual evidence. Read-only retrieval; not architecture approval, implementation, or semantic code review.",
+      "source": ".agents/roles/reader.md",
+      "skill": "example-context",
+      "codex": {
+        "model": "gpt-5.6-luna",
+        "model_reasoning_effort": "low",
+        "sandbox_mode": "read-only"
+      },
+      "claude": {
+        "model": "haiku",
+        "effort": null,
+        "maxTurns": 12,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "general-coder",
+      "name": "example-general-coder",
+      "description": "Implement one well-specified, bounded feature, ordinary bug fix, or contained refactor. Use an advanced coder for high-risk contracts or repeated reasoning failures.",
+      "source": ".agents/roles/general-coder.md",
+      "skill": "example-implement",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "medium",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "medium",
+        "maxTurns": 48,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Edit",
+          "Write",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": "worktree"
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "test-maintainer",
+      "name": "example-test-maintainer",
+      "description": "Design, implement, or repair meaningful tests and fixtures; investigate coverage gaps and flaky assertions. Use for substantial behavioral or persistence risk, not automatically every trivial edit.",
+      "source": ".agents/roles/test-maintainer.md",
+      "skill": "example-test",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "high",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "high",
+        "maxTurns": 32,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Edit",
+          "Write",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": "worktree"
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "documentation-updater",
+      "name": "example-documentation-updater",
+      "description": "Update durable user/developer documentation and scoped agent guidance to match accepted, implemented behavior. Do not create parallel plans/specs or rewrite GitHub scope.",
+      "source": ".agents/roles/documentation-updater.md",
+      "skill": "example-document",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "medium",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "medium",
+        "maxTurns": 20,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Edit",
+          "Write",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": "worktree"
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "issue-filer",
+      "name": "example-issue-filer",
+      "description": "Create or update a GitHub issue using the existing classification template; deduplicate, preserve scope/approval history, and verify the saved body. Not permission to implement or merge.",
+      "source": ".agents/roles/issue-filer.md",
+      "skill": "example-issue",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "medium",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "medium",
+        "maxTurns": 20,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "pr-manager",
+      "name": "example-pr-manager",
+      "description": "Own an authorized PR branch lifecycle: early draft, current-head checks/reviews, bounded fix requests, merge verification, and selective cleanup. Not a semantic reviewer or autonomous nested dispatcher.",
+      "source": ".agents/roles/pr-manager.md",
+      "skill": "example-pr",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "low",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "low",
+        "maxTurns": 24,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "advanced-coder",
+      "name": "example-advanced-coder",
+      "description": "Handle high-risk cross-module work, difficult debugging, or a bounded escalation after repeated failed hypotheses. Preserve existing work and solve the named blocker without redesigning unrelated systems.",
+      "source": ".agents/roles/advanced-coder.md",
+      "skill": "example-escalate",
+      "codex": {
+        "model": "gpt-5.6-sol",
+        "model_reasoning_effort": "xhigh",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "opus",
+        "effort": "xhigh",
+        "maxTurns": 40,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Edit",
+          "Write",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": "worktree"
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "reviewer",
+      "name": "example-reviewer",
+      "description": "Independently review a specific base/head diff for correctness, regression, security, architecture boundaries, and acceptance gaps. Read-only, fresh context; never its author or a style-nit generator.",
+      "source": ".agents/roles/reviewer.md",
+      "skill": "example-review",
+      "codex": {
+        "model": "gpt-5.6-sol",
+        "model_reasoning_effort": "high",
+        "sandbox_mode": "read-only"
+      },
+      "claude": {
+        "model": "opus",
+        "effort": "high",
+        "maxTurns": 36,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "architect",
+      "name": "example-architect",
+      "description": "Resolve a consequential architecture or contract question using existing code and accepted decisions. Produce a bounded decision proposal for GitHub, not an unapproved redesign or implementation plan tree.",
+      "source": ".agents/roles/architect.md",
+      "skill": "example-architecture",
+      "codex": {
+        "model": "gpt-5.6-sol",
+        "model_reasoning_effort": "xhigh",
+        "sandbox_mode": "read-only"
+      },
+      "claude": {
+        "model": "opus",
+        "effort": "xhigh",
+        "maxTurns": 28,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "ci-investigator",
+      "name": "example-ci-investigator",
+      "description": "Classify a concrete CI failure or review-check discrepancy from logs and workflow files. Read-only diagnosis; distinguish code, infrastructure, flakiness, configuration, and stale-head results.",
+      "source": ".agents/roles/ci-investigator.md",
+      "skill": "example-ci",
+      "codex": {
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "medium",
+        "sandbox_mode": "read-only"
+      },
+      "claude": {
+        "model": "sonnet",
+        "effort": "medium",
+        "maxTurns": 20,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": null
+      },
+      "activation": "task-routed"
+    },
+    {
+      "id": "deep-rescue",
+      "name": "example-deep-rescue",
+      "description": "Optional, explicitly authorized final investigation of a named blocker after advanced analysis. Disabled by default; not an automatic routine coding or architecture route.",
+      "source": ".agents/roles/deep-rescue.md",
+      "skill": "example-escalate",
+      "codex": {
+        "model": "gpt-5.6-sol",
+        "model_reasoning_effort": "max",
+        "sandbox_mode": "workspace-write"
+      },
+      "claude": {
+        "model": "fable",
+        "effort": "max",
+        "maxTurns": 32,
+        "tools": [
+          "Read",
+          "Grep",
+          "Glob",
+          "Bash",
+          "Edit",
+          "Write",
+          "Skill"
+        ],
+        "permissionMode": "default",
+        "isolation": "worktree"
+      },
+      "activation": "explicit-approval-only"
+    }
+  ]
+}
