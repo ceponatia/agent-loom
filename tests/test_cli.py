@@ -40,6 +40,42 @@ class CliTests(unittest.TestCase):
             self.assertFalse((root / ".claude" / "agents").exists())
             self.assertFalse((root / ".codex" / "agents").exists())
 
+    def test_init_preserves_preexisting_files_in_managed_dirs_on_rollback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            root.mkdir()
+            unrelated = root / ".claude" / "agents" / "custom-agent.md"
+            unrelated.parent.mkdir(parents=True)
+            unrelated.write_text("not mine\n", encoding="utf-8")
+            (root / "AGENTS.md").write_text(
+                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n", encoding="utf-8"
+            )
+            self.assertEqual(
+                main(["init", str(root), "--preset", "minimal", "--platform", "both", "--install-root-guidance"]),
+                2,
+            )
+            self.assertFalse((root / ".agents").exists())
+            self.assertEqual(unrelated.read_text(encoding="utf-8"), "not mine\n")
+            self.assertFalse((root / ".claude" / "agents" / "loom-coder.md").exists())
+
+    def test_init_restores_first_guidance_file_when_second_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            root.mkdir()
+            (root / "CLAUDE.md").write_text(
+                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n", encoding="utf-8"
+            )
+            self.assertEqual(
+                main(["init", str(root), "--preset", "minimal", "--platform", "both", "--install-root-guidance"]),
+                2,
+            )
+            self.assertFalse((root / ".agents").exists())
+            self.assertFalse((root / "AGENTS.md").exists())
+            self.assertEqual(
+                (root / "CLAUDE.md").read_text(encoding="utf-8"),
+                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

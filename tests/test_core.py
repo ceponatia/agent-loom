@@ -152,6 +152,21 @@ class CoreSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(AgentLoomError, "invalid"):
                 render(self.root)
 
+    def test_transaction_backup_path_traversal_is_rejected(self):
+        secret = Path(self.temp.name) / "secret.txt"
+        secret.write_text("do not leak me\n", encoding="utf-8")
+        target = self.root / ".claude/agents/loom-coder.md"
+        original = target.read_bytes()
+        txn = self.root / ".agents/.agent-loom-txn-evil"
+        (txn / "backups").mkdir(parents=True)
+        (txn / "journal.json").write_text(json.dumps({
+            "state": "applying",
+            "operations": [{"rel": ".claude/agents/loom-coder.md", "backup": str(secret), "created": False, "stage": None}],
+        }), encoding="utf-8")
+        with self.assertRaisesRegex(AgentLoomError, "Invalid transaction backup reference"):
+            sync(self.root)
+        self.assertEqual(target.read_bytes(), original)
+
     def test_incomplete_transaction_is_recovered_before_sync(self):
         target = self.root / ".claude/agents/loom-coder.md"
         original = target.read_bytes()

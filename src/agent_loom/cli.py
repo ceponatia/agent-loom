@@ -7,7 +7,7 @@ import sys
 from importlib import metadata, resources
 from pathlib import Path
 
-from .core import AgentLoomError, CONFIG, sync, validate_project
+from .core import AgentLoomError, CONFIG, render, sync, validate_project
 
 
 def version() -> str:
@@ -51,6 +51,18 @@ def _append_managed_block(path: Path, body: str) -> bool:
     return True
 
 
+def _prune_empty_subdirs(path: Path) -> None:
+    if not path.is_dir():
+        return
+    for child in sorted(path.iterdir()):
+        if child.is_dir():
+            _prune_empty_subdirs(child)
+            try:
+                child.rmdir()
+            except OSError:
+                pass
+
+
 def init_project(root: Path, preset: str, platform: str, install_root_guidance: bool = False) -> None:
     root = root.resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -58,6 +70,11 @@ def init_project(root: Path, preset: str, platform: str, install_root_guidance: 
     if agents.exists():
         raise AgentLoomError(f"Refusing to initialize over existing {agents}; adopt it manually or run sync/check instead")
     source = _preset_root(preset)
+    managed_dirs = (root / ".codex" / "agents", root / ".claude" / "agents", root / ".claude" / "skills")
+    preexisting_dirs = {d for d in managed_dirs if d.exists()}
+    output_paths: list[Path] = []
+    preexisting_outputs: set[Path] = set()
+    guidance_writes: list[tuple[Path, bytes | None]] = []
     try:
         _copy_resource_tree(source, agents)
         platforms = ["claude", "codex"] if platform == "both" else [platform]
@@ -66,20 +83,39 @@ def init_project(root: Path, preset: str, platform: str, install_root_guidance: 
             encoding="utf-8",
             newline="\n",
         )
+        output_paths = [root / rel for rel in render(root)]
+        preexisting_outputs = {p for p in output_paths if p.exists()}
         sync(root)
         if install_root_guidance:
-            _append_managed_block(
+            guidance = [(
                 root / "AGENTS.md",
                 "Agent definitions are maintained under `.agents/`. Follow `.agents/AGENTS.md` for agent-system maintenance. Do not hand-edit generated files under `.claude/agents/`, `.claude/skills/`, or `.codex/agents/`.",
-            )
+            )]
             if "claude" in platforms:
-                _append_managed_block(root / "CLAUDE.md", "@AGENTS.md")
+                guidance.append((root / "CLAUDE.md", "@AGENTS.md"))
+            for path, body in guidance:
+                original = path.read_bytes() if path.exists() else None
+                _append_managed_block(path, body)
+                guidance_writes.append((path, original))
     except BaseException:
+        for path, original in guidance_writes:
+            if original is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(original)
         if agents.exists():
             shutil.rmtree(agents, ignore_errors=True)
-        for managed_dir in (root / ".codex" / "agents", root / ".claude" / "agents", root / ".claude" / "skills"):
+        for path in output_paths:
+            if path not in preexisting_outputs and path.exists():
+                path.unlink(missing_ok=True)
+        for managed_dir in managed_dirs:
             if managed_dir.exists():
-                shutil.rmtree(managed_dir, ignore_errors=True)
+                _prune_empty_subdirs(managed_dir)
+                if managed_dir not in preexisting_dirs:
+                    try:
+                        managed_dir.rmdir()
+                    except OSError:
+                        pass
         raise
 
 

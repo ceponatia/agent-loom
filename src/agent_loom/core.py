@@ -400,6 +400,16 @@ def _transaction_dirs(root: Path) -> list[Path]:
     return sorted(p for p in agents.glob(".agent-loom-txn-*") if p.is_dir())
 
 
+def _safe_backup_path(txn: Path, name: object) -> Path:
+    if not isinstance(name, str) or not name or "/" in name or "\\" in name or name in {".", ".."}:
+        raise AgentLoomError(f"Invalid transaction backup reference: {name!r}")
+    backups_dir = (txn / "backups").resolve()
+    candidate = (txn / "backups" / name).resolve(strict=False)
+    if not candidate.is_relative_to(backups_dir):
+        raise AgentLoomError(f"Transaction backup escapes its directory: {name!r}")
+    return candidate
+
+
 def _restore_transaction(root: Path, txn: Path) -> None:
     journal_path = txn / "journal.json"
     if not journal_path.is_file():
@@ -410,9 +420,12 @@ def _restore_transaction(root: Path, txn: Path) -> None:
         shutil.rmtree(txn, ignore_errors=True)
         return
     for op in reversed(journal["operations"]):
+        if not isinstance(op, dict):
+            raise AgentLoomError(f"Invalid transaction operation entry: {op!r}")
         rel = op.get("rel")
         target = _safe_metadata_path(root, rel) if rel == MANIFEST else _safe_managed_path(root, rel)
-        backup = txn / "backups" / op["backup"] if op.get("backup") else None
+        backup_name = op.get("backup")
+        backup = _safe_backup_path(txn, backup_name) if backup_name else None
         if backup and backup.is_file():
             target.parent.mkdir(parents=True, exist_ok=True)
             temp = target.with_name(target.name + ".agent-loom-restore")
