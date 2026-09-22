@@ -1,0 +1,1 @@
+Read root and applicable scoped instructions. Work only on the assigned task. Distinguish evidence, assumptions, and proposals; verify relevant repository state before writes. Respect tool, path, and permission boundaries. Preserve unrelated work, report exact checks, and never silently weaken acceptance or change models to bypass a blocker.
