@@ -9,7 +9,7 @@ The project is intentionally a generator, not an agent runtime: it does not run 
 Python 3.11+ is required. Claude Code and Codex are optional runtime dependencies and are installed separately.
 
 ```bash
-# Recommended isolated CLI install after the package is published
+# Recommended isolated CLI install
 uv tool install rolesync
 
 # Alternative
@@ -19,7 +19,7 @@ pipx install rolesync
 uvx rolesync --version
 ```
 
-Until a PyPI release exists, install from a tagged/reviewed source checkout instead of assuming the registry name is live.
+`rolesync` is currently a pre-release (`1.0.0rc1`) on PyPI. Since it's the only version published so far, `pip`/`pipx`/`uv` install it by default with no extra flags.
 
 ## Quick start
 
@@ -105,7 +105,7 @@ python -m build
 
 CI runs the test suites on Linux, Windows, and macOS using the minimum supported Python and the newest explicitly supported Python. It also installs the built wheel into a clean environment and exercises the CLI outside the source tree.
 
-Releases are built by GitHub Actions and the publish workflow is configured for PyPI Trusted Publishing through the protected `pypi` environment. Configure the matching Trusted Publisher on PyPI before publishing the first release.
+Releases are built by GitHub Actions and published to PyPI via Trusted Publishing through the protected `pypi` environment: publishing a GitHub Release triggers the `publish.yml` workflow, which builds and uploads the package automatically.
 
 ## Example workflow catalog
 
