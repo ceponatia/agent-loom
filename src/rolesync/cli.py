@@ -7,20 +7,20 @@ import sys
 from importlib import metadata, resources
 from pathlib import Path
 
-from .core import AgentLoomError, CONFIG, render, sync, validate_project
+from .core import RoleSyncError, CONFIG, render, sync, validate_project
 
 
 def version() -> str:
     try:
-        return metadata.version("agent-loom")
+        return metadata.version("rolesync")
     except metadata.PackageNotFoundError:
         return "1.0.0rc1"
 
 
 def _preset_root(name: str):
-    base = resources.files("agent_loom").joinpath("presets", name)
+    base = resources.files("rolesync").joinpath("presets", name)
     if not base.is_dir():
-        raise AgentLoomError(f"Unknown preset: {name}")
+        raise RoleSyncError(f"Unknown preset: {name}")
     return base
 
 
@@ -32,18 +32,18 @@ def _copy_resource_tree(source, destination: Path) -> None:
             _copy_resource_tree(child, target)
         else:
             if target.exists():
-                raise AgentLoomError(f"Refusing to overwrite existing file during init: {target}")
+                raise RoleSyncError(f"Refusing to overwrite existing file during init: {target}")
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(child.read_bytes())
 
 
 def _append_managed_block(path: Path, body: str) -> bool:
-    start = "<!-- agent-loom:start -->"
-    end = "<!-- agent-loom:end -->"
+    start = "<!-- rolesync:start -->"
+    end = "<!-- rolesync:end -->"
     if path.exists():
         text = path.read_text(encoding="utf-8")
         if start in text or end in text:
-            raise AgentLoomError(f"{path.name} already contains an agent-loom managed block")
+            raise RoleSyncError(f"{path.name} already contains a rolesync managed block")
         prefix = text.rstrip() + "\n\n" if text.strip() else ""
     else:
         prefix = ""
@@ -68,7 +68,7 @@ def init_project(root: Path, preset: str, platform: str, install_root_guidance: 
     root.mkdir(parents=True, exist_ok=True)
     agents = root / ".agents"
     if agents.exists():
-        raise AgentLoomError(f"Refusing to initialize over existing {agents}; adopt it manually or run sync/check instead")
+        raise RoleSyncError(f"Refusing to initialize over existing {agents}; adopt it manually or run sync/check instead")
     source = _preset_root(preset)
     managed_dirs = (root / ".codex" / "agents", root / ".claude" / "agents", root / ".claude" / "skills")
     preexisting_dirs = {d for d in managed_dirs if d.exists()}
@@ -122,8 +122,8 @@ def init_project(root: Path, preset: str, platform: str, install_root_guidance: 
 def _sync_command(root: Path, check: bool) -> int:
     try:
         problems = sync(root, check=check)
-    except (OSError, UnicodeError, AgentLoomError, KeyError, TypeError) as exc:
-        print(f"agent-loom: {exc}", file=sys.stderr)
+    except (OSError, UnicodeError, RoleSyncError, KeyError, TypeError) as exc:
+        print(f"rolesync: {exc}", file=sys.stderr)
         return 2
     if check and problems:
         print("Generated files differ:", file=sys.stderr)
@@ -164,8 +164,8 @@ def _doctor(root: Path) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="agent-loom", description="Generate native Claude Code and Codex agent definitions from one canonical catalog.")
-    parser.add_argument("--version", action="version", version=f"agent-loom {version()}")
+    parser = argparse.ArgumentParser(prog="rolesync", description="Generate native Claude Code and Codex agent definitions from one canonical catalog.")
+    parser.add_argument("--version", action="version", version=f"rolesync {version()}")
     sub = parser.add_subparsers(dest="command")
 
     init = sub.add_parser("init", help="Initialize a project from a built-in preset")
@@ -189,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "init":
             init_project(args.root, args.preset, args.platform, args.install_root_guidance)
-            print(f"Initialized agent-loom in {args.root.resolve()}")
+            print(f"Initialized rolesync in {args.root.resolve()}")
             return 0
         if args.command == "sync":
             return _sync_command(args.root, check=False)
@@ -197,8 +197,8 @@ def main(argv: list[str] | None = None) -> int:
             return _sync_command(args.root, check=True)
         if args.command == "doctor":
             return _doctor(args.root)
-    except (OSError, UnicodeError, AgentLoomError, KeyError, TypeError, json.JSONDecodeError) as exc:
-        print(f"agent-loom: {exc}", file=sys.stderr)
+    except (OSError, UnicodeError, RoleSyncError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        print(f"rolesync: {exc}", file=sys.stderr)
         return 2
     return 2
 

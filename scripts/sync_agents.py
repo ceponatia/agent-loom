@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backward-compatible source-tree entry point for agent-loom."""
+"""Backward-compatible source-tree entry point for RoleSync."""
 from __future__ import annotations
 
 import sys
@@ -10,8 +10,8 @@ SRC = ROOT / "src"
 if SRC.is_dir():
     sys.path.insert(0, str(SRC))
 
-from agent_loom.cli import legacy_sync_main  # noqa: E402
-from agent_loom.core import MANIFEST, render, sync  # noqa: E402,F401
+from rolesync.cli import legacy_sync_main  # noqa: E402
+from rolesync.core import MANIFEST, render, sync  # noqa: E402,F401
 
 
 def main() -> int:

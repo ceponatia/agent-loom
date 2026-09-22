@@ -1,6 +1,6 @@
-# agent-loom
+# RoleSync
 
-agent-loom keeps one canonical set of agent roles and skills under `.agents/` and renders native definitions for both Claude Code and Codex. Generated files are tracked by checksum so accidental hand-edits are detected rather than silently overwritten.
+RoleSync keeps one canonical set of agent roles and skills under `.agents/` and renders native definitions for both Claude Code and Codex. Generated files are tracked by checksum so accidental hand-edits are detected rather than silently overwritten.
 
 The project is intentionally a generator, not an agent runtime: it does not run a scheduler, broker credentials, enforce GitHub permissions, or provide durable background orchestration.
 
@@ -10,13 +10,13 @@ Python 3.11+ is required. Claude Code and Codex are optional runtime dependencie
 
 ```bash
 # Recommended isolated CLI install after the package is published
-uv tool install agent-loom
+uv tool install rolesync
 
 # Alternative
-pipx install agent-loom
+pipx install rolesync
 
 # One-off execution
-uvx agent-loom --version
+uvx rolesync --version
 ```
 
 Until a PyPI release exists, install from a tagged/reviewed source checkout instead of assuming the registry name is live.
@@ -24,12 +24,12 @@ Until a PyPI release exists, install from a tagged/reviewed source checkout inst
 ## Quick start
 
 ```bash
-agent-loom init . --preset minimal --platform both
-agent-loom check
-agent-loom doctor
+rolesync init . --preset minimal --platform both
+rolesync check
+rolesync doctor
 ```
 
-`init` refuses to replace an existing `.agents/` directory. Add `--install-root-guidance` if you want agent-loom to append a small managed block to root `AGENTS.md` and, for Claude projects, `CLAUDE.md`. Existing files are appended to rather than replaced.
+`init` refuses to replace an existing `.agents/` directory. Add `--install-root-guidance` if you want RoleSync to append a small managed block to root `AGENTS.md` and, for Claude projects, `CLAUDE.md`. Existing files are appended to rather than replaced.
 
 Built-in presets:
 
@@ -41,11 +41,11 @@ Choose `--platform claude`, `--platform codex`, or `--platform both`. The select
 ## Commands
 
 ```text
-agent-loom init [ROOT] [--preset minimal|github-workflow] [--platform both|claude|codex]
-agent-loom sync [--root ROOT]
-agent-loom check [--root ROOT]
-agent-loom doctor [--root ROOT]
-agent-loom --version
+rolesync init [ROOT] [--preset minimal|github-workflow] [--platform both|claude|codex]
+rolesync sync [--root ROOT]
+rolesync check [--root ROOT]
+rolesync doctor [--root ROOT]
+rolesync --version
 ```
 
 - `init` installs user-owned canonical sources from a built-in preset, then renders native output.
@@ -66,7 +66,7 @@ python scripts/sync_agents.py --check
 .agents/
   catalog.json
   common.md
-  loom.json                 optional agent-loom project settings
+  loom.json                 optional RoleSync project settings
   policy.json               optional workflow policy; informational to the generator
   roles/<role>.md
   skills/<skill>/SKILL.md
@@ -78,19 +78,19 @@ python scripts/sync_agents.py --check
 .codex/agents/*.toml         generated when Codex is enabled
 ```
 
-Only paths recorded in the validated generated manifest are owned by agent-loom. Unrelated files under `.claude/` and `.codex/` remain untouched.
+Only paths recorded in the validated generated manifest are owned by RoleSync. Unrelated files under `.claude/` and `.codex/` remain untouched.
 
 ## Safety and ownership
 
-agent-loom treats repository paths and the generated manifest as untrusted input. Managed output paths must stay inside `.claude/agents/`, `.claude/skills/`, or `.codex/agents/`; traversal and escaping symlink paths are rejected. Stale entries receive the same containment validation before deletion.
+RoleSync treats repository paths and the generated manifest as untrusted input. Managed output paths must stay inside `.claude/agents/`, `.claude/skills/`, or `.codex/agents/`; traversal and escaping symlink paths are rejected. Stale entries receive the same containment validation before deletion.
 
-Synchronization is staged and guarded by a cross-process lock. Before applying a multi-file update, agent-loom stores recovery copies and a transaction journal. A later `sync` restores an interrupted transaction before generating new output.
+Synchronization is staged and guarded by a cross-process lock. Before applying a multi-file update, RoleSync stores recovery copies and a transaction journal. A later `sync` restores an interrupted transaction before generating new output.
 
 Canonical skill directories may contain binary resources; they are mirrored byte-for-byte for Claude. Common transient files are ignored, while likely secret files such as `.env`, private keys, and PKCS#12 bundles are rejected rather than copied. This is a guardrail, not a replacement for repository secret scanning.
 
 ## Defining agents
 
-Each catalog role supplies an internal ID, lowercase-kebab-case generated name, description, role source under `.agents/roles/`, a skill under `.agents/skills/`, and provider-specific native settings. agent-loom validates required types and boundaries but intentionally does not hard-code every provider model or effort value; provider availability changes and must be verified in the installed runtime. Optional roles can set `"enabled": false`; disabled roles remain in canonical sources but are omitted from native discovery output until enabled.
+Each catalog role supplies an internal ID, lowercase-kebab-case generated name, description, role source under `.agents/roles/`, a skill under `.agents/skills/`, and provider-specific native settings. RoleSync validates required types and boundaries but intentionally does not hard-code every provider model or effort value; provider availability changes and must be verified in the installed runtime. Optional roles can set `"enabled": false`; disabled roles remain in canonical sources but are omitted from native discovery output until enabled.
 
 `policy.json`, role `activation` notes, and prose permissions do not become enforcement just because they are rendered. Filesystem sandboxing, connector credentials, repository protections, and runtime settings remain the actual security boundaries.
 

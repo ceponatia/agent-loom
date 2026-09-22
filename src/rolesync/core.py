@@ -26,28 +26,28 @@ IGNORED_SKILL_NAMES = {".DS_Store", "Thumbs.db"}
 IGNORED_SKILL_SUFFIXES = {".pyc", ".swp", ".swo", "~"}
 
 
-class AgentLoomError(ValueError):
-    """Raised when agent-loom cannot safely validate or synchronize a project."""
+class RoleSyncError(ValueError):
+    """Raised when rolesync cannot safely validate or synchronize a project."""
 
 
 def _read_json(path: Path, label: str) -> dict:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise AgentLoomError(f"{label}: {exc}") from exc
+        raise RoleSyncError(f"{label}: {exc}") from exc
     if not isinstance(value, dict):
-        raise AgentLoomError(f"{label}: expected a JSON object")
+        raise RoleSyncError(f"{label}: expected a JSON object")
     return value
 
 
 def _validate_relpath(rel: str, *, managed: bool = False) -> PurePosixPath:
     if not isinstance(rel, str) or not rel or "\\" in rel:
-        raise AgentLoomError(f"Unsafe path: {rel!r}")
+        raise RoleSyncError(f"Unsafe path: {rel!r}")
     p = PurePosixPath(rel)
     if p.is_absolute() or any(part in {"", ".", ".."} for part in p.parts):
-        raise AgentLoomError(f"Unsafe path: {rel}")
+        raise RoleSyncError(f"Unsafe path: {rel}")
     if managed and not any(p == root or root in p.parents for root in MANAGED_ROOTS):
-        raise AgentLoomError(f"Path is outside agent-loom managed roots: {rel}")
+        raise RoleSyncError(f"Path is outside rolesync managed roots: {rel}")
     return p
 
 
@@ -56,12 +56,12 @@ def _reject_symlink_chain(root: Path, path: Path) -> None:
     try:
         rel = path.relative_to(root)
     except ValueError as exc:
-        raise AgentLoomError(f"Path escapes project root: {path}") from exc
+        raise RoleSyncError(f"Path escapes project root: {path}") from exc
     cursor = root
     for part in rel.parts:
         cursor = cursor / part
         if cursor.exists() and cursor.is_symlink():
-            raise AgentLoomError(f"Refusing to operate through symlink: {cursor}")
+            raise RoleSyncError(f"Refusing to operate through symlink: {cursor}")
 
 
 def _safe_managed_path(root: Path, rel: str) -> Path:
@@ -71,22 +71,22 @@ def _safe_managed_path(root: Path, rel: str) -> Path:
     resolved_root = root.resolve()
     resolved_target = target.resolve(strict=False)
     if not resolved_target.is_relative_to(resolved_root):
-        raise AgentLoomError(f"Managed path escapes project root: {rel}")
+        raise RoleSyncError(f"Managed path escapes project root: {rel}")
     managed_root = next(m for m in MANAGED_ROOTS if p == m or m in p.parents)
     expected = root.joinpath(*managed_root.parts).resolve(strict=False)
     if not resolved_target.is_relative_to(expected):
-        raise AgentLoomError(f"Managed path escapes its owned root: {rel}")
+        raise RoleSyncError(f"Managed path escapes its owned root: {rel}")
     return target
 
 
 def _safe_metadata_path(root: Path, rel: str) -> Path:
     p = _validate_relpath(rel)
     if not (p == PurePosixPath(".agents") or PurePosixPath(".agents") in p.parents):
-        raise AgentLoomError(f"Metadata path must stay under .agents: {rel}")
+        raise RoleSyncError(f"Metadata path must stay under .agents: {rel}")
     target = root.joinpath(*p.parts)
     _reject_symlink_chain(root, target.parent)
     if not target.resolve(strict=False).is_relative_to(root.resolve()):
-        raise AgentLoomError(f"Metadata path escapes project root: {rel}")
+        raise RoleSyncError(f"Metadata path escapes project root: {rel}")
     return target
 
 
@@ -96,26 +96,26 @@ def _platforms(root: Path) -> set[str]:
         return {"claude", "codex"}
     config = _read_json(path, CONFIG)
     if config.get("schema_version") != 1:
-        raise AgentLoomError(f"{CONFIG}: unsupported schema_version")
+        raise RoleSyncError(f"{CONFIG}: unsupported schema_version")
     values = config.get("platforms", ["claude", "codex"])
     if not isinstance(values, list) or not values or any(v not in {"claude", "codex"} for v in values):
-        raise AgentLoomError(f"{CONFIG}: platforms must be a non-empty list containing only claude/codex")
+        raise RoleSyncError(f"{CONFIG}: platforms must be a non-empty list containing only claude/codex")
     return set(values)
 
 
 def _validate_catalog(root: Path) -> tuple[dict, str]:
     agents = root / ".agents"
     if not agents.is_dir() or agents.is_symlink():
-        raise AgentLoomError(".agents must be a normal directory")
+        raise RoleSyncError(".agents must be a normal directory")
     catalog = _read_json(agents / "catalog.json", ".agents/catalog.json")
     if catalog.get("schema_version") != 1:
-        raise AgentLoomError(".agents/catalog.json: unsupported schema_version")
+        raise RoleSyncError(".agents/catalog.json: unsupported schema_version")
     roles = catalog.get("roles")
     if not isinstance(roles, list):
-        raise AgentLoomError(".agents/catalog.json: roles must be a list")
+        raise RoleSyncError(".agents/catalog.json: roles must be a list")
     common_path = agents / "common.md"
     if not common_path.is_file() or common_path.is_symlink():
-        raise AgentLoomError(".agents/common.md must be a normal file")
+        raise RoleSyncError(".agents/common.md must be a normal file")
     common = common_path.read_text(encoding="utf-8").strip()
     seen_ids: set[str] = set()
     seen_names: set[str] = set()
@@ -123,58 +123,58 @@ def _validate_catalog(root: Path) -> tuple[dict, str]:
     for i, role in enumerate(roles):
         where = f".agents/catalog.json: roles[{i}]"
         if not isinstance(role, dict):
-            raise AgentLoomError(f"{where} must be an object")
+            raise RoleSyncError(f"{where} must be an object")
         missing = required - role.keys()
         if missing:
-            raise AgentLoomError(f"{where} missing required fields: {', '.join(sorted(missing))}")
+            raise RoleSyncError(f"{where} missing required fields: {', '.join(sorted(missing))}")
         if "enabled" in role and not isinstance(role["enabled"], bool):
-            raise AgentLoomError(f"{where}.enabled must be a boolean when present")
+            raise RoleSyncError(f"{where}.enabled must be a boolean when present")
         role_id = role["id"]
         name = role["name"]
         if not isinstance(role_id, str) or not role_id:
-            raise AgentLoomError(f"{where}.id must be a non-empty string")
+            raise RoleSyncError(f"{where}.id must be a non-empty string")
         if role_id in seen_ids:
-            raise AgentLoomError(f"{where}.id duplicates {role_id}")
+            raise RoleSyncError(f"{where}.id duplicates {role_id}")
         seen_ids.add(role_id)
         if not isinstance(name, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", name):
-            raise AgentLoomError(f"{where}.name must be lowercase-kebab-case")
+            raise RoleSyncError(f"{where}.name must be lowercase-kebab-case")
         if name in seen_names:
-            raise AgentLoomError(f"{where}.name duplicates {name}")
+            raise RoleSyncError(f"{where}.name duplicates {name}")
         seen_names.add(name)
         if not isinstance(role["description"], str) or not role["description"].strip():
-            raise AgentLoomError(f"{where}.description must be a non-empty string")
+            raise RoleSyncError(f"{where}.description must be a non-empty string")
         source_rel = role["source"]
         if not isinstance(source_rel, str):
-            raise AgentLoomError(f"{where}.source must be a string")
+            raise RoleSyncError(f"{where}.source must be a string")
         source = (root / source_rel).resolve()
         roles_root = (agents / "roles").resolve()
         if not source.is_relative_to(roles_root) or not source.is_file():
-            raise AgentLoomError(f"Role source outside canonical directory: {source}")
+            raise RoleSyncError(f"Role source outside canonical directory: {source}")
         if (root / source_rel).is_symlink():
-            raise AgentLoomError(f"{where}.source must not be a symlink")
+            raise RoleSyncError(f"{where}.source must not be a symlink")
         skill = role["skill"]
         if not isinstance(skill, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", skill):
-            raise AgentLoomError(f"{where}.skill must be lowercase-kebab-case")
+            raise RoleSyncError(f"{where}.skill must be lowercase-kebab-case")
         skill_file = agents / "skills" / skill / "SKILL.md"
         if not skill_file.is_file() or skill_file.is_symlink():
-            raise AgentLoomError(f"Missing skill: {skill}")
+            raise RoleSyncError(f"Missing skill: {skill}")
         codex = role["codex"]
         claude = role["claude"]
         if not isinstance(codex, dict) or not all(isinstance(codex.get(k), str) and codex[k] for k in ("model", "model_reasoning_effort", "sandbox_mode")):
-            raise AgentLoomError(f"{where}.codex requires non-empty model, model_reasoning_effort, and sandbox_mode strings")
+            raise RoleSyncError(f"{where}.codex requires non-empty model, model_reasoning_effort, and sandbox_mode strings")
         if not isinstance(claude, dict):
-            raise AgentLoomError(f"{where}.claude must be an object")
+            raise RoleSyncError(f"{where}.claude must be an object")
         for key in ("model", "permissionMode"):
             if not isinstance(claude.get(key), str) or not claude[key]:
-                raise AgentLoomError(f"{where}.claude.{key} must be a non-empty string")
+                raise RoleSyncError(f"{where}.claude.{key} must be a non-empty string")
         if not isinstance(claude.get("tools"), list) or any(not isinstance(x, str) or not x for x in claude["tools"]):
-            raise AgentLoomError(f"{where}.claude.tools must be a list of non-empty strings")
+            raise RoleSyncError(f"{where}.claude.tools must be a list of non-empty strings")
         if not isinstance(claude.get("maxTurns"), int) or isinstance(claude["maxTurns"], bool) or claude["maxTurns"] <= 0:
-            raise AgentLoomError(f"{where}.claude.maxTurns must be a positive integer")
+            raise RoleSyncError(f"{where}.claude.maxTurns must be a positive integer")
         if claude.get("effort") is not None and not isinstance(claude["effort"], str):
-            raise AgentLoomError(f"{where}.claude.effort must be a string or null")
+            raise RoleSyncError(f"{where}.claude.effort must be a string or null")
         if claude.get("isolation") not in {None, "worktree"}:
-            raise AgentLoomError(f"{where}.claude.isolation must be worktree or null")
+            raise RoleSyncError(f"{where}.claude.isolation must be worktree or null")
     return catalog, common
 
 
@@ -189,26 +189,26 @@ def _skip_skill_path(path: Path) -> bool:
 def _reject_sensitive_skill_path(path: Path) -> None:
     lower = path.name.lower()
     if lower in SENSITIVE_SKILL_NAMES or lower.startswith(".env.") or path.suffix.lower() in SENSITIVE_SKILL_SUFFIXES:
-        raise AgentLoomError(f"Refusing to mirror likely secret from skill resources: {path.as_posix()}")
+        raise RoleSyncError(f"Refusing to mirror likely secret from skill resources: {path.as_posix()}")
 
 
 def _skill_files(root: Path) -> Iterator[tuple[Path, Path]]:
     skills = root / ".agents/skills"
     if not skills.is_dir() or skills.is_symlink():
-        raise AgentLoomError(".agents/skills must be a normal directory")
+        raise RoleSyncError(".agents/skills must be a normal directory")
     for current, dirs, files in os.walk(skills, followlinks=False):
         current_path = Path(current)
         for dirname in list(dirs):
             child = current_path / dirname
             if child.is_symlink():
-                raise AgentLoomError(f"Canonical skills must not contain symlink directories: {child}")
+                raise RoleSyncError(f"Canonical skills must not contain symlink directories: {child}")
             if dirname == "__pycache__":
                 dirs.remove(dirname)
         for filename in files:
             source = current_path / filename
             rel = source.relative_to(skills)
             if source.is_symlink():
-                raise AgentLoomError(f"Canonical skills must not contain symlink files: {source}")
+                raise RoleSyncError(f"Canonical skills must not contain symlink files: {source}")
             if _skip_skill_path(rel):
                 continue
             _reject_sensitive_skill_path(rel)
@@ -246,7 +246,7 @@ def render(root: Path) -> dict[str, bytes]:
             try:
                 tomllib.loads(toml)
             except tomllib.TOMLDecodeError as exc:
-                raise AgentLoomError(f"Generated TOML for role {name!r} is invalid: {exc}") from exc
+                raise RoleSyncError(f"Generated TOML for role {name!r} is invalid: {exc}") from exc
             output[f".codex/agents/{name}.toml"] = toml.encode("utf-8")
         if "claude" in platforms:
             cl = role["claude"]
@@ -282,15 +282,15 @@ def render(root: Path) -> dict[str, bytes]:
 
 def _validate_manifest(value: dict) -> dict[str, str]:
     if value.get("schema_version") != 1:
-        raise AgentLoomError(f"{MANIFEST}: unsupported schema_version")
+        raise RoleSyncError(f"{MANIFEST}: unsupported schema_version")
     files = value.get("files")
     if not isinstance(files, dict):
-        raise AgentLoomError(f"{MANIFEST}: files must be an object")
+        raise RoleSyncError(f"{MANIFEST}: files must be an object")
     result: dict[str, str] = {}
     for rel, digest in files.items():
         _validate_relpath(rel, managed=True)
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
-            raise AgentLoomError(f"{MANIFEST}: invalid sha256 for {rel!r}")
+            raise RoleSyncError(f"{MANIFEST}: invalid sha256 for {rel!r}")
         result[rel] = digest
     return result
 
@@ -360,7 +360,7 @@ def _problems(root: Path, output: dict[str, bytes], previous: dict[str, str], ma
 @contextmanager
 def _project_lock(root: Path) -> Iterator[None]:
     lock_name = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()[:24]
-    lock_path = Path(tempfile.gettempdir()) / f"agent-loom-{lock_name}.lock"
+    lock_path = Path(tempfile.gettempdir()) / f"rolesync-{lock_name}.lock"
     handle = lock_path.open("a+b")
     handle.seek(0, os.SEEK_END)
     if handle.tell() == 0:
@@ -374,13 +374,13 @@ def _project_lock(root: Path) -> Iterator[None]:
             try:
                 msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
             except OSError as exc:
-                raise AgentLoomError("Another agent-loom process is already modifying this project") from exc
+                raise RoleSyncError("Another rolesync process is already modifying this project") from exc
         else:
             import fcntl
             try:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             except OSError as exc:
-                raise AgentLoomError("Another agent-loom process is already modifying this project") from exc
+                raise RoleSyncError("Another rolesync process is already modifying this project") from exc
         yield
     finally:
         try:
@@ -397,16 +397,16 @@ def _project_lock(root: Path) -> Iterator[None]:
 
 def _transaction_dirs(root: Path) -> list[Path]:
     agents = root / ".agents"
-    return sorted(p for p in agents.glob(".agent-loom-txn-*") if p.is_dir())
+    return sorted(p for p in agents.glob(".rolesync-txn-*") if p.is_dir())
 
 
 def _safe_backup_path(txn: Path, name: object) -> Path:
     if not isinstance(name, str) or not name or "/" in name or "\\" in name or name in {".", ".."}:
-        raise AgentLoomError(f"Invalid transaction backup reference: {name!r}")
+        raise RoleSyncError(f"Invalid transaction backup reference: {name!r}")
     backups_dir = (txn / "backups").resolve()
     candidate = (txn / "backups" / name).resolve(strict=False)
     if not candidate.is_relative_to(backups_dir):
-        raise AgentLoomError(f"Transaction backup escapes its directory: {name!r}")
+        raise RoleSyncError(f"Transaction backup escapes its directory: {name!r}")
     return candidate
 
 
@@ -421,14 +421,14 @@ def _restore_transaction(root: Path, txn: Path) -> None:
         return
     for op in reversed(journal["operations"]):
         if not isinstance(op, dict):
-            raise AgentLoomError(f"Invalid transaction operation entry: {op!r}")
+            raise RoleSyncError(f"Invalid transaction operation entry: {op!r}")
         rel = op.get("rel")
         target = _safe_metadata_path(root, rel) if rel == MANIFEST else _safe_managed_path(root, rel)
         backup_name = op.get("backup")
         backup = _safe_backup_path(txn, backup_name) if backup_name else None
         if backup and backup.is_file():
             target.parent.mkdir(parents=True, exist_ok=True)
-            temp = target.with_name(target.name + ".agent-loom-restore")
+            temp = target.with_name(target.name + ".rolesync-restore")
             shutil.copy2(backup, temp)
             os.replace(temp, target)
         elif op.get("created") and target.exists():
@@ -443,7 +443,7 @@ def _recover_incomplete(root: Path) -> None:
 
 
 def _apply_transaction(root: Path, output: dict[str, bytes], stale: list[str], manifest_bytes: bytes) -> None:
-    txn = root / ".agents" / f".agent-loom-txn-{uuid.uuid4().hex}"
+    txn = root / ".agents" / f".rolesync-txn-{uuid.uuid4().hex}"
     stage_dir = txn / "stage"
     backup_dir = txn / "backups"
     stage_dir.mkdir(parents=True)
@@ -467,7 +467,7 @@ def _apply_transaction(root: Path, output: dict[str, bytes], stale: list[str], m
         created = not target.exists()
         if target.exists():
             if not target.is_file():
-                raise AgentLoomError(f"Refusing to replace non-file managed path: {rel}")
+                raise RoleSyncError(f"Refusing to replace non-file managed path: {rel}")
             backup_name = f"{index}.bak"
             shutil.copy2(target, backup_dir / backup_name)
         stage_name = None
@@ -497,7 +497,7 @@ def _apply_transaction(root: Path, output: dict[str, bytes], stale: list[str], m
 def sync(root: Path, check: bool = False) -> list[str]:
     root = root.resolve()
     if not root.is_dir():
-        raise AgentLoomError(f"Project root does not exist: {root}")
+        raise RoleSyncError(f"Project root does not exist: {root}")
     if not check:
         with _project_lock(root):
             _recover_incomplete(root)
@@ -520,15 +520,15 @@ def _sync_locked(root: Path) -> list[str]:
         target = _safe_managed_path(root, rel)
         if target.exists():
             if not target.is_file():
-                raise AgentLoomError(f"Refusing to replace non-file managed path: {rel}")
+                raise RoleSyncError(f"Refusing to replace non-file managed path: {rel}")
             current = target.read_bytes()
             if current != data and not _matches_ownership(rel, current, previous.get(rel)):
-                raise AgentLoomError(f"Refusing to overwrite untracked/hand-edited native file: {rel}. Reconcile it into canonical sources first.")
+                raise RoleSyncError(f"Refusing to overwrite untracked/hand-edited native file: {rel}. Reconcile it into canonical sources first.")
     stale = sorted(set(previous) - set(output))
     for rel in stale:
         target = _safe_managed_path(root, rel)
         if target.is_file() and not _matches_ownership(rel, target.read_bytes(), previous[rel]):
-            raise AgentLoomError(f"Refusing to remove edited stale output: {rel}")
+            raise RoleSyncError(f"Refusing to remove edited stale output: {rel}")
     _apply_transaction(root, output, stale, manifest_bytes)
     return problems
 
@@ -539,8 +539,8 @@ def validate_project(root: Path) -> list[str]:
     try:
         render(root)
         _load_previous(root)
-    except (OSError, UnicodeError, AgentLoomError, KeyError, TypeError) as exc:
+    except (OSError, UnicodeError, RoleSyncError, KeyError, TypeError) as exc:
         issues.append(str(exc))
     if _transaction_dirs(root):
-        issues.append("Incomplete agent-loom transaction is present; run `agent-loom sync` to recover it")
+        issues.append("Incomplete rolesync transaction is present; run `rolesync sync` to recover it")
     return issues

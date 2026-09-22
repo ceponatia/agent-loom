@@ -33,12 +33,12 @@ jobs:
         shell: bash
         run: |
           python -m pip install --force-reinstall dist/*.whl
-          agent-loom --version
+          rolesync --version
           TMP_ROOT="$(python -c 'import tempfile; print(tempfile.mkdtemp())')"
-          agent-loom init "$TMP_ROOT/project" --preset minimal --platform both
-          agent-loom check --root "$TMP_ROOT/project"
-          agent-loom doctor --root "$TMP_ROOT/project" || test $? -eq 1
-          agent-loom init "$TMP_ROOT/github-project" --preset github-workflow --platform both
-          agent-loom check --root "$TMP_ROOT/github-project"
+          rolesync init "$TMP_ROOT/project" --preset minimal --platform both
+          rolesync check --root "$TMP_ROOT/project"
+          rolesync doctor --root "$TMP_ROOT/project" || test $? -eq 1
+          rolesync init "$TMP_ROOT/github-project" --preset github-workflow --platform both
+          rolesync check --root "$TMP_ROOT/github-project"
           test ! -e "$TMP_ROOT/github-project/.claude/agents/example-deep-rescue.md"
           test ! -e "$TMP_ROOT/github-project/.codex/agents/example-deep-rescue.toml"

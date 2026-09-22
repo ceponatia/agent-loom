@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-loom"
+name = "rolesync"
 version = "1.0.0rc1"
 description = "Generate native Claude Code and Codex agent definitions from one canonical catalog."
 readme = "README.md"
@@ -24,18 +24,18 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ceponatia/agent-loom"
-Repository = "https://github.com/ceponatia/agent-loom"
-Issues = "https://github.com/ceponatia/agent-loom/issues"
+Homepage = "https://github.com/ceponatia/rolesync"
+Repository = "https://github.com/ceponatia/rolesync"
+Issues = "https://github.com/ceponatia/rolesync/issues"
 
 [project.scripts]
-agent-loom = "agent_loom.cli:main"
+rolesync = "rolesync.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-agent_loom = [
+rolesync = [
   "presets/*/*",
   "presets/*/*/*",
   "presets/*/*/*/*",

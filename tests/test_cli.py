@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from agent_loom.cli import main
+from rolesync.cli import main
 
 
 class CliTests(unittest.TestCase):
@@ -30,7 +30,7 @@ class CliTests(unittest.TestCase):
             root = Path(tmp) / "repo"
             root.mkdir()
             (root / "AGENTS.md").write_text(
-                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n", encoding="utf-8"
+                "<!-- rolesync:start -->\nexisting\n<!-- rolesync:end -->\n", encoding="utf-8"
             )
             self.assertEqual(
                 main(["init", str(root), "--preset", "minimal", "--platform", "both", "--install-root-guidance"]),
@@ -48,7 +48,7 @@ class CliTests(unittest.TestCase):
             unrelated.parent.mkdir(parents=True)
             unrelated.write_text("not mine\n", encoding="utf-8")
             (root / "AGENTS.md").write_text(
-                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n", encoding="utf-8"
+                "<!-- rolesync:start -->\nexisting\n<!-- rolesync:end -->\n", encoding="utf-8"
             )
             self.assertEqual(
                 main(["init", str(root), "--preset", "minimal", "--platform", "both", "--install-root-guidance"]),
@@ -63,7 +63,7 @@ class CliTests(unittest.TestCase):
             root = Path(tmp) / "repo"
             root.mkdir()
             (root / "CLAUDE.md").write_text(
-                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n", encoding="utf-8"
+                "<!-- rolesync:start -->\nexisting\n<!-- rolesync:end -->\n", encoding="utf-8"
             )
             self.assertEqual(
                 main(["init", str(root), "--preset", "minimal", "--platform", "both", "--install-root-guidance"]),
@@ -73,7 +73,7 @@ class CliTests(unittest.TestCase):
             self.assertFalse((root / "AGENTS.md").exists())
             self.assertEqual(
                 (root / "CLAUDE.md").read_text(encoding="utf-8"),
-                "<!-- agent-loom:start -->\nexisting\n<!-- agent-loom:end -->\n",
+                "<!-- rolesync:start -->\nexisting\n<!-- rolesync:end -->\n",
             )
 
 

@@ -14,8 +14,8 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from agent_loom.cli import init_project
-from agent_loom.core import AgentLoomError, MANIFEST, render, sync
+from rolesync.cli import init_project
+from rolesync.core import RoleSyncError, MANIFEST, render, sync
 
 
 class CoreSafetyTests(unittest.TestCase):
@@ -34,7 +34,7 @@ class CoreSafetyTests(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["files"][".claude/agents/../../README.md"] = hashlib.sha256(victim.read_bytes()).hexdigest()
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-        with self.assertRaisesRegex(AgentLoomError, "Unsafe path"):
+        with self.assertRaisesRegex(RoleSyncError, "Unsafe path"):
             sync(self.root)
         self.assertEqual(victim.read_text(encoding="utf-8"), "keep me\n")
 
@@ -51,7 +51,7 @@ class CoreSafetyTests(unittest.TestCase):
             self.skipTest(f"symlink creation not permitted: {exc}")
         source = self.root / ".agents/roles/coder.md"
         source.write_text(source.read_text(encoding="utf-8") + "\nChanged.\n", encoding="utf-8")
-        with self.assertRaisesRegex(AgentLoomError, "symlink|escapes"):
+        with self.assertRaisesRegex(RoleSyncError, "symlink|escapes"):
             sync(self.root)
         self.assertEqual(list(outside.iterdir()), [])
 
@@ -66,7 +66,7 @@ class CoreSafetyTests(unittest.TestCase):
     def test_likely_secret_in_skill_resources_is_rejected(self):
         secret = self.root / ".agents/skills/loom-implement/.env"
         secret.write_text("TOKEN=secret\n", encoding="utf-8")
-        with self.assertRaisesRegex(AgentLoomError, "likely secret"):
+        with self.assertRaisesRegex(RoleSyncError, "likely secret"):
             render(self.root)
 
     def test_platform_selection_limits_owned_outputs(self):
@@ -143,13 +143,13 @@ class CoreSafetyTests(unittest.TestCase):
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
         catalog["roles"][0]["skill"] = "does-not-exist"
         catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
-        (self.root / ".agents/.agent-loom-txn-test").mkdir(parents=True)
-        with self.assertRaisesRegex(AgentLoomError, "Missing skill"):
+        (self.root / ".agents/.rolesync-txn-test").mkdir(parents=True)
+        with self.assertRaisesRegex(RoleSyncError, "Missing skill"):
             sync(self.root, check=True)
 
-    def test_invalid_generated_toml_is_reported_as_agent_loom_error(self):
-        with mock.patch("agent_loom.core.tomllib.loads", side_effect=tomllib.TOMLDecodeError("bad toml")):
-            with self.assertRaisesRegex(AgentLoomError, "invalid"):
+    def test_invalid_generated_toml_is_reported_as_rolesync_error(self):
+        with mock.patch("rolesync.core.tomllib.loads", side_effect=tomllib.TOMLDecodeError("bad toml")):
+            with self.assertRaisesRegex(RoleSyncError, "invalid"):
                 render(self.root)
 
     def test_transaction_backup_path_traversal_is_rejected(self):
@@ -157,20 +157,20 @@ class CoreSafetyTests(unittest.TestCase):
         secret.write_text("do not leak me\n", encoding="utf-8")
         target = self.root / ".claude/agents/loom-coder.md"
         original = target.read_bytes()
-        txn = self.root / ".agents/.agent-loom-txn-evil"
+        txn = self.root / ".agents/.rolesync-txn-evil"
         (txn / "backups").mkdir(parents=True)
         (txn / "journal.json").write_text(json.dumps({
             "state": "applying",
             "operations": [{"rel": ".claude/agents/loom-coder.md", "backup": str(secret), "created": False, "stage": None}],
         }), encoding="utf-8")
-        with self.assertRaisesRegex(AgentLoomError, "Invalid transaction backup reference"):
+        with self.assertRaisesRegex(RoleSyncError, "Invalid transaction backup reference"):
             sync(self.root)
         self.assertEqual(target.read_bytes(), original)
 
     def test_incomplete_transaction_is_recovered_before_sync(self):
         target = self.root / ".claude/agents/loom-coder.md"
         original = target.read_bytes()
-        txn = self.root / ".agents/.agent-loom-txn-test"
+        txn = self.root / ".agents/.rolesync-txn-test"
         backups = txn / "backups"
         backups.mkdir(parents=True)
         (backups / "0.bak").write_bytes(original)
