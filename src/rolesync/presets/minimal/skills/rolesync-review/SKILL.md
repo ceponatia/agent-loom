@@ -1,5 +1,5 @@
 ---
-name: loom-review
+name: rolesync-review
 description: "Review an exact revision independently for material defects and unmet requirements."
 ---
 

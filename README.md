@@ -36,7 +36,7 @@ Built-in presets:
 - `minimal` — three generic roles (orchestrator, coder, reviewer) with no mandatory GitHub planning workflow.
 - `github-workflow` — the richer example catalog shipped by this repository for issue → implementation → review → PR work. It is an opinionated starting point, not a universal policy.
 
-Choose `--platform claude`, `--platform codex`, or `--platform both`. The selection is stored in `.agents/loom.json`.
+Choose `--platform claude`, `--platform codex`, or `--platform both`. The selection is stored in `.agents/rolesync.json`. Projects initialized by `1.0.0rc1` that still contain `.agents/loom.json` remain supported as a legacy fallback; new projects write `.agents/rolesync.json`.
 
 ## Commands
 
@@ -66,7 +66,7 @@ python scripts/sync_agents.py --check
 .agents/
   catalog.json
   common.md
-  loom.json                 optional RoleSync project settings
+  rolesync.json                 optional RoleSync project settings
   policy.json               optional workflow policy; informational to the generator
   roles/<role>.md
   skills/<skill>/SKILL.md

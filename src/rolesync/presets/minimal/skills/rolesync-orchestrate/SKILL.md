@@ -1,5 +1,5 @@
 ---
-name: loom-orchestrate
+name: rolesync-orchestrate
 description: "Coordinate a bounded repository task with explicit ownership, evidence, and independent review."
 ---
 

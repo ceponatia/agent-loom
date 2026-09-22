@@ -8,7 +8,7 @@ from importlib import metadata, resources
 from pathlib import Path
 
 from . import __version__
-from .core import RoleSyncError, CONFIG, render, sync, validate_project
+from .core import RoleSyncError, CONFIG, LEGACY_CONFIG, render, sync, validate_project
 
 
 def version() -> str:
@@ -145,6 +145,10 @@ def _doctor(root: Path) -> int:
         return 1
     drift = sync(root, check=True)
     config_path = root / CONFIG
+    if not config_path.is_file():
+        legacy_path = root / LEGACY_CONFIG
+        if legacy_path.is_file():
+            config_path = legacy_path
     platforms = ["claude", "codex"]
     if config_path.is_file():
         config = json.loads(config_path.read_text(encoding="utf-8"))

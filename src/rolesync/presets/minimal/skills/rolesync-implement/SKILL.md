@@ -1,5 +1,5 @@
 ---
-name: loom-implement
+name: rolesync-implement
 description: "Implement a bounded repository change with regression protection and verifiable checks."
 ---
 

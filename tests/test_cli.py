@@ -56,7 +56,7 @@ class CliTests(unittest.TestCase):
             )
             self.assertFalse((root / ".agents").exists())
             self.assertEqual(unrelated.read_text(encoding="utf-8"), "not mine\n")
-            self.assertFalse((root / ".claude" / "agents" / "loom-coder.md").exists())
+            self.assertFalse((root / ".claude" / "agents" / "rolesync-coder.md").exists())
 
     def test_init_restores_first_guidance_file_when_second_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
