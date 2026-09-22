@@ -17,7 +17,7 @@ checkout: <runtime-assigned path>
 base_sha: <exact expected commit>
 dependency_commits: []
 owned_paths: []
-read_only_paths_or_shared_assets: []
+read_only_or_shared_paths: []
 branch: <worker or integration branch; exact owner>
 branch_lifetime: <issue-ephemeral | persistent-iteration | release | unknown>
 allowed_operations: <read/edit/test/commit/GitHub writes individually scoped>

@@ -32,7 +32,7 @@ Waiting belongs in native tool waits or an event-driven runtime. Do not keep an 
 
 All of these must be established for the **current** head:
 
-1. User/repository authorization covers merge into this target and risk class. No pending product or required human art/approval decision remains.
+1. User/repository authorization covers merge into this target and risk class. No pending product or required human approval decision remains.
 2. Issue acceptance has evidence, the complete integrated diff was independently reviewed, and material findings are resolved or validly handled under policy.
 3. Required checks, applicable GitHub reviews, conversation-resolution policy, conflict state, and branch/ruleset requirements are satisfied. Missing access to verify a required gate is a blocker.
 4. The proposed merge head matches the inspected/reviewed head. Use a head-match condition where available; never use an admin bypass. If the head changes, reevaluate.

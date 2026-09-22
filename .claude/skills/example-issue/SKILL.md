@@ -5,7 +5,7 @@ description: "File or revise a GitHub issue with the repository classification t
 
 # Maintain an issue contract
 
-Read `.github/ISSUE_WORKFLOW.md`, choose the actual `.github/ISSUE_TEMPLATE/` file by deliverable, and search for duplicate/related issues. If these files are missing, report setup required rather than inventing a new competing template system.
+Read the repository's documented issue workflow, choose the actual `.github/ISSUE_TEMPLATE/` file by deliverable, and search for duplicate/related issues. If these are missing, report setup required rather than inventing a new competing template system.
 
 Fill the body explicitly when creating through CLI/API. Separate observations, proposals, decisions, and unknowns; make acceptance verifiable. Assign one primary classification. Split only independent deliverables or approvals, not every procedural step.
 

@@ -9,7 +9,7 @@ Read the issue, current repository state, `.agents/policy.json`, and `.agents/re
 
 Classify scope/risk; retrieve focused context only as needed. Resolve blocking contract choices through the architect. Ask the PR manager/integrator to prepare an issue branch; create an early draft only once a meaningful commit exists. Follow `.agents/references/git-pr-lifecycle.md`.
 
-Assign one coder by default. Use separate worktrees for independent parallel slices and serialize shared assets/integration. Require exact base and owned paths in every packet. Test specialists and documentation workers are conditional, not mandatory stages.
+Assign one coder by default. Use separate worktrees for independent parallel slices and serialize shared contracts/integration. Require exact base and owned paths in every packet. Test specialists and documentation workers are conditional, not mandatory stages.
 
 Track evidence of progress. For repeated failed hypotheses, stop and preserve the worker before advanced reassignment. Do not interpret an active test, queue, approval, or tool outage as deficient reasoning. Keep retries across agent replacements in one finding ledger.
 

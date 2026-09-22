@@ -88,3 +88,11 @@ python /path/to/agent-loom/scripts/sync_agents.py --root /path/to/your/project
 This reads `/path/to/your/project/.agents/` and writes `/path/to/your/project/.claude/` and `/path/to/your/project/.codex/` — nothing from agent-loom's own `scripts/` directory ends up in your project. This is the better option if you maintain one catalog (or a few variants) and apply it to several repositories, since you edit and version the catalog in one place and re-run the generator per target as it evolves.
 
 Either way, `.agents/` has to travel with the project whose agents it defines — the generator has no built-in fetch/sync of canonical sources from elsewhere, and `--root` only relocates the read/write root, not the requirement that `<root>/.agents/` exists.
+
+## Author
+
+Built by Brian Grubba ([@ceponatia](https://github.com/ceponatia)) at Snarebox LLC.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

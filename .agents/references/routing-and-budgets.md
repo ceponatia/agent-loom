@@ -9,7 +9,7 @@ These are proposed starting rules, not measured optimums. `catalog.json` is the 
 | Simple factual question | Main session or reader | No coding team |
 | Bounded routine issue | Orchestrator → coder → reviewer → PR manager | Reader for unfamiliar code; docs if references change |
 | Significant behavior change | Same, plus independent test-maintainer | Architect if a shared contract is touched |
-| High-risk save/schema/concurrency boundary | Architect if decision unresolved; advanced coder directly | Focused independent tests and premium review |
+| High-risk persistence/schema/concurrency boundary | Architect if decision unresolved; advanced coder directly | Focused independent tests and premium review |
 | CI failure | PR manager → CI investigator → coordinator | Coder for code; environment repair for access/runner failure |
 | Repeated failed repair | Stop/preserve → advanced coder | Deep-rescue only under explicit approval |
 | Issue-writing request | Issue-filer | Reader when evidence is missing; no automatic implementation |
