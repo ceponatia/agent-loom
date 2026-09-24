@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 - 2026-09-24
+
+- Finish the RoleSync rebrand in the `minimal` preset: generated roles are now `rolesync-orchestrator`, `rolesync-coder`, and `rolesync-reviewer` (skills `rolesync-orchestrate`, `rolesync-implement`, `rolesync-review`) instead of the leftover `loom-*` names shipped in 1.0.0.
+- New projects store their platform selection in `.agents/rolesync.json`. Existing `.agents/loom.json` files are still read as a legacy fallback, including by `doctor`.
+- Projects already initialized with `loom-*` names keep them, because `.agents/catalog.json` is user-owned. To switch, rename the entries in `.agents/catalog.json` and the matching `.agents/skills/loom-*` directories, then run `rolesync sync`; stale generated `loom-*` files are removed automatically.
+
 ## 1.0.0 - 2026-09-22
 
 - Promote to a stable 1.0.0 release; no functional changes from 1.0.0rc1 beyond the items below.
